@@ -2,7 +2,7 @@
 
 canvas滑动验证码 仅仅依赖jquery
 
-[体验地址](`https://www.zdxhyangyan.cn/example/react_redux/#/biz/ValidScroller`)
+[体验地址](https://www.zdxhyangyan.cn/example/react_redux/#/biz/ValidScroller)
 
 > 你可以在网址查看需要 接口返回的相关数据格式 
 
