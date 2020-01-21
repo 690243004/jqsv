@@ -1,6 +1,6 @@
 {
   "name": "jqsv",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "滑动验证组件",
   "main": "lib/index.js",
   "module": "es/index.js",
