@@ -6,7 +6,7 @@ export default function (
   intDuration: number /*Time duration*/
 ) {
   element.each(function () {
-    var jqNode = $(self)
+    var jqNode = $(element)
     jqNode.css({ position: 'relative' })
     for (var x = 1; x <= intShakes; x++) {
       jqNode

@@ -1,11 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <div id="app">app</div>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>滑动验证组件 Typescript + Jquery </title>
+  <style>
+    #app {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      padding: 6px 12px;
+      background: #3385ff;
+      border: transparent;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    #app:hover,
+    #app:active {
+      background: #66ccff;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">点击出现验证组件
+    <div id="el"></div>
+  </div>
+
+
+</body>
+
 </html>
