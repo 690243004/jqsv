@@ -28,6 +28,9 @@
     "javascript",
     "jquery"
   ],
+  "files": [
+    "dist","es","lib","src"
+  ],
   "dependencies": {
     "jquery": "^3.4.1"
   },
