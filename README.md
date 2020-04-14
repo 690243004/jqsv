@@ -228,3 +228,34 @@ module.exports = {
   }
 }
 ```
+
+此外，还需要安装 
+
+```
+cnpm i husky lint-staged -D
+```
+- husky：在 .git/hooks 中写入 pre-commit 等脚本激活钩子，在 Git 操作时触发；
+- lint-staged：参考 Git 中 staged 暂存区概念，在每次提交时只检查本次提交的文件。
+
+# 关于prettier
+prettier是一个流行的代码格式化工具的名称，它能够解析代码，使用你自己设定的规则来重新打印出格式规范的代码。
+
+Prettier具有以下几个有优点：
+- 可配置化
+- 支持多种语言
+- 集成多数的编辑器
+- 简洁的配置项
+
+它支持的语言有：
+- JavaScript, including ES2017
+- JSX
+- Angular
+- Vue
+- Flow
+- TypeScript
+- CSS, Less, and SCSS
+- HTML
+- JSON
+- GraphQL
+- Markdown, including GFM and MDX
+- YAML
