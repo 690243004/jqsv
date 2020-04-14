@@ -32,7 +32,7 @@ module.exports = {
     // 添加自定义规则
     'prettier/prettier': 1,
     // 是否能使用console.log
-    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'no-console':2,
     // 必须使用全等
     eqeqeq: ['warn', 'always'],
     // 首选const
