@@ -7,7 +7,7 @@ const htmlWebpackPlugin = require('html-webpack-plugin')
 module.exports = merge(common, {
   mode: 'development',
   entry: {
-    bundle: path.resolve(__dirname, '../example/index.ts')
+    bundle: path.resolve(__dirname, '../example/index.js')
   },
   devtool: 'eval-source-map',
   output: {

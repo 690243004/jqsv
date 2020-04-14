@@ -1,10 +1,11 @@
-import Jqsv from '../src/index'
+import Jqsv from '../es/jsqv'
+import '../es/common.css'
 
 const app = document.getElementById('app')
 const el = document.getElementById('el')
 
 const JqsvConfig = {
-  onLoad(token: number) {
+  onLoad() {
     return Promise.resolve({
       code: 10000,
       data: {
@@ -20,7 +21,7 @@ const JqsvConfig = {
       }
     })
   },
-  onSubmit(vaildToken: string, requestToken: number, timespan: number, point: number, datelist: number[]) {
+  onSubmit(vaildToken, requestToken, timespan, point) {
     const error = {
       code: 10001,
       msg: '校验值与实际值出现误差',
@@ -43,13 +44,13 @@ const JqsvConfig = {
   onFail() {}
 }
 
-let instance: any
-app!.addEventListener('click', async function () {
+let instance
+app.addEventListener('click', async function () {
   if (instance) {
     if (instance.state === 'loaded') {
       instance.show()
     }
   } else {
-    instance = await Jqsv(JqsvConfig, el!)
+    instance = await Jqsv(JqsvConfig, el)
   }
 })
