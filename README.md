@@ -11,14 +11,15 @@ canvas滑动验证码 使用jquery写的组件。
 # 项目特色
 - 使用typescript搭建
 - 已在线上运行
-- 使用mocha作为测试套件，代码覆盖率99%，放心使用
+- 使用mocha作为测试套件，代码覆盖率99%，放心使用(待完成)
 - 完美支持移动端与PC端
 
 
 # 使用方法
 
 ```js
-import Jqsv from "jqsv";
+import Jqsv from 'jqsv'
+import 'jqsv/es/common.css'
 const app = document.getElementById('app')
 app.addEventListener("click", async function() {
   if (instance) {
@@ -97,7 +98,7 @@ const JqsvConfig = {
 # 项目运行
 
 ```js
-cnpm i 
+npm install
 npm run dev 
 npm run build 
 ```
