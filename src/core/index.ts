@@ -213,12 +213,12 @@ class Jqsv {
     closeBtn.on('click', (e: any) => {
       e.stopPropagation()
       componentWraper.fadeOut('normal')
-      const close = this.config.close
-      close ? close() : void 0
+      this.config.close ? this.config.close() : void 0
     })
     refreshBtn.on('click', (e: any) => {
       e.stopPropagation()
       this.processData().then(this.processCanvas.bind(this))
+      this.config.refresh ? this.config.refresh() : void 0;
     })
     let originX: number
     let isTouch = false
@@ -270,14 +270,14 @@ class Jqsv {
               .then(this.successAnimation.bind(this))
               .then(() => {
                 componentWraper.fadeOut()
-                this.config.onSuccess ? this.config.onSuccess(data) : void 0
+                this.config.success ? this.config.success(data) : void 0
               })
           } else {
             this.showCanvasText(msg, false)
             shake(componentWraper, 2, 10, 400)
             slider.css({ transform: `translateX(0px)` }) // 重置滚动条
             this.moveOverlayCanvas!(globalConfig.initialX)
-            this.config.onFail ? this.config.onFail() : void 0
+            this.config.fail ? this.config.fail() : void 0
           }
         })
         .catch(() => {

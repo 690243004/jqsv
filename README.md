@@ -1,10 +1,12 @@
 # 滑动验证
 
-canvas滑动验证码 仅仅依赖jquery
-
-[体验地址](https://www.zdxhyangyan.cn/example/react_redux/#/biz/ValidScroller)
+canvas滑动验证码 使用jquery写的组件。
 
 > 你可以在网址查看需要 接口返回的相关数据格式 
+
+# 使用效果
+
+![](./doc/GIF2020-4-1412-47-32.gif)
 
 # 项目特色
 - 使用typescript搭建
@@ -12,11 +14,13 @@ canvas滑动验证码 仅仅依赖jquery
 - 使用mocha作为测试套件，代码覆盖率99%，放心使用
 - 完美支持移动端与PC端
 
+
 # 使用方法
 
 ```js
-import Jqsv from "../src/index";
-app!.addEventListener("click", async function() {
+import Jqsv from "jqsv";
+const app = document.getElementById('app')
+app.addEventListener("click", async function() {
   if (instance) {
     if (instance.state === "loaded") {
       instance.show();
@@ -27,15 +31,76 @@ app!.addEventListener("click", async function() {
 });
 ```
 
+关于`JqsvConfig`，这是一个配置对象，该对象的属性为
 
-# 使用效果
+| 属性名   | 类型     | 是否必填 | 说明                                           |
+|----------|----------|----------|------------------------------------------------|
+| onLoad   | function | 必须传入 | 加载数据函数，新建组件对象或刷新的时候都会调用 |
+| onSubmit | function | 必须传入 | 验证函数                                       |
+| success  | function | 可选     | 验证成功后的钩子函数                           |
+| fail     | function | 可选     | 验证失败后的钩子函数                           |
+| close    | function | 可选     | 组件关闭后的钩子函数                           |
+| refresh  | function | 可选     | 组件刷新后的钩子函数                           |
 
-![](./img01.png)
+
+例如 : 
+```js
+const JqsvConfig = {
+  onLoad(token: number) {
+    return Promise.resolve({
+      code: 10000,
+      data: {
+        imgWidth: 260,
+        imgHeight: 160,
+        normal:
+          "data:image/jpg;base64...",
+        small:
+          "data:image/jpg;base64...",
+        array: [
+        ],
+        locationY: 35,
+        validToken: "9c619f596a504ccbaf18e86fb2e09352"
+      }
+    });
+  },
+  onSubmit(
+    vaildToken: string,
+    requestToken: number,
+    timespan: number,
+    point: number,
+    datelist: number[]
+  ) {
+    const error = {
+      code: 10001,
+      msg: "校验值与实际值出现误差",
+      data: null
+    };
+    const sucess = {
+      code: 10000,
+      msg: "校验正确",
+      data: "6087346787674a9e93cc83016b116487"
+    };
+    if (point > 83 && point < 100) {
+      return Promise.resolve(sucess);
+    } else {
+      return Promise.resolve(error);
+    }
+  },
+  onSuccess() {
+    // instance.destory()
+  },
+  onFail() {}
+};
+```
 
 
-# 实现思路
+# 项目运行
 
-![](./img02.png)
+```js
+cnpm i 
+npm run dev 
+npm run build 
+```
 
 # 打包心得
 
@@ -268,3 +333,27 @@ npm publish
 - patch：小变动，比如修复bug等，版本号变动 v1.0.0->v1.0.1
 - minor：增加新功能，不影响现有功能,版本号变动 v1.0.0->v1.1.0
 - major：破坏模块对向后的兼容性，版本号变动 v1.0.0->v2.0.0
+
+# 关于libraryTarget
+
+在webpack的ouput配置下可以选择`libraryTarget`，其实这个是指定你的包导出的后，其他开发者是如何引用你的包的方式。即上面的打包模式
+
+- var : 会将值作为变量名导出，当使用 script 标签时，其执行后在全局作用域可用
+- window : 当 library 加载完成，入口起点的返回值将分配给 window 对象
+- commonjs : 当 library 加载完成，入口起点的返回值将分配给 exports 对象。这个名称也意味着模块用于 CommonJS 环境
+- umd : 这是一种可以将你的 library 能够在所有的模块定义下都可运行的方式（并且导出的完全不是模块）。它将在 CommonJS, AMD 环境下运行，或将模块导出到 global 下的变量
+最终输出：
+
+例如 `commonjs` 模式
+```js
+exports["MyLibrary"] = _entry_return_;
+// 使用者将会这样调用你的 library：
+require("MyLibrary").doSomething();
+```
+
+另外，我们希望打的包是没有被压缩(UglifyJsPlugin)的，类似`vant`、`vue`那样。所以，我们应该在webpack的配置设置添加
+```js
+optimization: {
+  minimize: false
+},
+```

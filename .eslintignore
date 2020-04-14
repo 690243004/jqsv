@@ -1,2 +1,4 @@
-/build/*.js
+/build/*
 /dist/*
+/lib/*
+/es/*
