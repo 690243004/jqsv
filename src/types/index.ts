@@ -1,5 +1,5 @@
 export interface JqsvConfig {
-  success?(): void
+  success?(data: any): void
   refresh?(): void
   fail?(): void
   close?(): void
@@ -11,8 +11,6 @@ export interface JqsvConfig {
     point: number,
     datelist: number[]
   ): Promise<JqsvOnSubmitReponse>
-  onSuccess(data: any): void
-  onFail?(): void
 }
 
 export interface JqsvOnSubmitReponse {
