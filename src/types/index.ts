@@ -27,12 +27,12 @@ export interface JqsvOnloadResponse {
 }
 
 export interface JqsvData {
-  img_X: number
-  img_Y: number
+  imgWidth: number
+  imgHeight: number
   normal: string
   small: string
   array: number[]
-  location_Y: number
+  locationY: number
   validToken: string
 }
 
@@ -44,7 +44,6 @@ export interface JqsvDOM {
   slider: JQuery
   sliderText: JQuery
   mask: JQuery
-  block: JQuery
   text: JQuery
   canvasText: JQuery
   actionBar: JQuery

@@ -75,9 +75,7 @@ app!.addEventListener("click", async function() {
   if (instance) {
     if (instance.state === "loaded") {
       instance.show();
-    } else {
-      return;
-    }
+    } 
   } else {
     instance = await Jqsv(JqsvConfig, el!);
   }

@@ -6,9 +6,9 @@ export default function (
   intDuration: number /*Time duration*/
 ) {
   element.each(function () {
-    var jqNode = $(element)
+    const jqNode = $(element)
     jqNode.css({ position: 'relative' })
-    for (var x = 1; x <= intShakes; x++) {
+    for (let x = 1; x <= intShakes; x++) {
       jqNode
         .animate({ left: intDistance * -1 }, intDuration / intShakes / 4)
         .animate({ left: intDistance }, intDuration / intShakes / 2)

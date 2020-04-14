@@ -5,7 +5,7 @@ const globalConfig = {
   initialX: 5,
   successColor: '#67C23A',
   failColor: '#F56C6C',
-  animateTime : 500
+  animateTime: 500
 }
 
 export default globalConfig
