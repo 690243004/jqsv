@@ -232,7 +232,7 @@ module.exports = {
 此外，还需要安装 
 
 ```
-cnpm i husky lint-staged pre-commit -D
+cnpm i husky lint-staged -D
 ```
 - husky：在 .git/hooks 中写入 pre-commit 等脚本激活钩子，在 Git 操作时触发；
 - lint-staged：参考 Git 中 staged 暂存区概念，在每次提交时只检查本次提交的文件。
