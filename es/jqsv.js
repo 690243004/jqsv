@@ -1,4 +1,14 @@
-(function(e, a) { for(var i in a) e[i] = a[i]; }(exports, /******/ (function(modules) { // webpackBootstrap
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory(require("jQuery"));
+	else if(typeof define === 'function' && define.amd)
+		define(["jQuery"], factory);
+	else {
+		var a = typeof exports === 'object' ? factory(require("jQuery")) : factory(root["jQuery"]);
+		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
+	}
+})(window, function(__WEBPACK_EXTERNAL_MODULE__0__) {
+return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
@@ -88,7 +98,7 @@
 /* 0 */
 /***/ (function(module, exports) {
 
-module.exports = require("jQuery");
+module.exports = __WEBPACK_EXTERNAL_MODULE__0__;
 
 /***/ }),
 /* 1 */
@@ -475,4 +485,5 @@ var core_Jqsv = /** @class */ (function () {
 
 
 /***/ })
-/******/ ])));
+/******/ ]);
+});

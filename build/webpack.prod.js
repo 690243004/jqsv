@@ -55,7 +55,7 @@ module.exports = [
     mode: 'production',
     // target: 'node',
     entry: {
-      jsqv: path.resolve(__dirname, '../src/index.ts')
+      jqsv: path.resolve(__dirname, '../src/index.ts')
     },
     output: {
       path: path.resolve(__dirname, '../lib'),
@@ -71,7 +71,7 @@ module.exports = [
     mode: 'production',
     // target: 'web',
     entry: {
-      jsqv: path.resolve(__dirname, '../src/index.ts')
+      jqsv: path.resolve(__dirname, '../src/index.ts')
     },
     output: {
       path: path.resolve(__dirname, '../es'),

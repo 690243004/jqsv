@@ -1,132 +1,137 @@
 // eslint-disable-next-line no-unused-vars
-import { JqsvConfig, JqsvData, JqsvDOM } from '../types'
+import { JqsvOption, JqsvDOM, JqsvData } from '../types'
 import globalConfig from '../config'
 import { toPx } from '../helper/util'
 import $ from 'jquery'
 import shake from '../extend/shake'
 
 class Jqsv {
-  readonly config: JqsvConfig
-  readonly el: JQuery
-  sTime?: number
-  data?: JqsvData
-  DOM?: JqsvDOM
-  state?: string
-  destory?: () => void
-  moveOverlayCanvas?: (x: number) => void
-
-  constructor(config: JqsvConfig, el: HTMLElement) {
-    this.config = config
-    this.el = $(el)
+  readonly _options: JqsvOption
+  readonly _el: JQuery
+  readonly _DOM: JqsvDOM
+  readonly _blockMeta: { width: number; height: number; imageCache: HTMLElement | null }
+  readonly _moveState: {
+    originX: number
+    isTouching: boolean
+  }
+  readonly _successAnimationChain: ((resolve: (value?: unknown) => void) => void)[]
+  _destory?: () => void
+  state: string
+  constructor(options: JqsvOption, el: HTMLElement) {
+    this._options = options
+    this._el = $(el)
+    this.state = 'loaded'
+    this._successAnimationChain = []
+    this._blockMeta = {
+      width: 0,
+      height: 0,
+      imageCache: null
+    }
+    this._moveState = {
+      originX: 0,
+      isTouching: false
+    }
+    this._DOM = {
+      componentWraper: $('<div>', { class: 'valid-wraper' }).css({
+        width: toPx(this._options.data.imgWidth, globalConfig.padding),
+        height: toPx(
+          this._options.data.imgHeight,
+          globalConfig.sliderContainerHeight,
+          globalConfig.actionBarHeight,
+          globalConfig.padding
+        )
+      }),
+      blockImage: $('<img>', {
+        src: this._options.data.small
+      }),
+      canvasContainer: $('<div>', {
+        class: 'canvas-container'
+      }),
+      canvas: $('<canvas>', {
+        class: 'canvas'
+      }),
+      overlayCanvas: $('<canvas>', {
+        class: 'canvas'
+      }),
+      sliderContainer: $('<div>', {
+        class: 'sliderContainer'
+      }),
+      slider: $('<div>', {
+        class: 'slider'
+      }),
+      mask: $('<div>', {
+        class: 'mask'
+      }),
+      text: $('<div>', {
+        class: 'text'
+      }).text('拖动滑块完成拼图'),
+      canvasText: $('<div>', {
+        class: 'canvas-text'
+      }),
+      sliderText: $('<span>', {
+        class: 'iconfont icongengduo'
+      }),
+      actionBar: $('<div>', {
+        class: 'action-bar'
+      }),
+      closeBtn: $('<span>', {
+        class: 'action-bar-item iconfont iconicon-test1'
+      }),
+      refreshBtn: $('<span>', {
+        class: 'action-bar-item iconfont iconicon-test'
+      }),
+      question: $('<span>', {
+        class: 'action-bar-item iconfont iconicon-test2'
+      }),
+      crossText: $('<div>', {
+        class: 'valid-wraper-cross-text'
+      }).append('<index class="iconfont icon-tongguoyanzheng"></index><span>通过验证</span>')
+    }
+    this._setup()
   }
 
-  // 初始化
-  processData(): Promise<void> {
-    const { onLoad } = this.config
-    return new Promise((resolve) => {
-      this.sTime = Date.now()
-      onLoad(this.sTime).then((response) => {
-        if (response.code === 10000) {
-          this.data = response.data
-          resolve()
-        }
-      })
-    })
+  _setup() {
+    this._processCanvas()
+    this._fillCanvas()
+    this._processeOverlayCanvas()
+    this._fillOverlay()
+    this._processEvent()
+    this._display()
+    this._processSuccessAnimationChain()
   }
 
-  init() {
-    return this.processData().then(() => {
-      this.processDOM()
-      this.processCanvas()
-      this.processeOverlayCanvas()
-      this.processEvent()
-      this.display()
-      this.state = 'loaded'
-      return this
-    })
-  }
-
-  // 初始化DOM
-  processDOM(): void {
-    const componentWraper = $('<div>', { class: 'valid-wraper' }).css({
-      width: toPx(this.data!.imgWidth, globalConfig.padding),
-      height: toPx(
-        this.data!.imgHeight,
-        globalConfig.sliderContainerHeight,
-        globalConfig.actionBarHeight,
-        globalConfig.padding
+  _processSuccessAnimationChain() {
+    this._successAnimationChain.push((resolve) => {
+      const { componentWraper, crossText } = this._DOM
+      componentWraper.empty().append(crossText)
+      componentWraper.animate(
+        {
+          width: toPx(250),
+          height: toPx(150),
+          padding: 0
+        },
+        500,
+        crossText.fadeIn.bind(crossText, 500, resolve)
       )
     })
-    // 创建画布容器
-    const canvasContainer = $('<div>', {
-      class: 'canvas-container'
+    this._successAnimationChain.push((resolve) => {
+      this._DOM.componentWraper.fadeOut(resolve)
+      this._destory!()
     })
-    // 创建画布
-    const canvas = $('<canvas>', {
-      class: 'canvas'
-    })
-    // 创建滑块容器
-    const sliderContainer = $('<div>', {
-      class: 'sliderContainer'
-    })
-    // 创建滑块
-    const slider = $('<div>', {
-      class: 'slider'
-    })
-    // 创建滑块文字
-    const sliderText = $('<span>', {
-      class: 'iconfont icongengduo'
-    })
-    // 创建滑块遮罩
-    const mask = $('<div>', {
-      class: 'mask'
-    })
-    // 创建提示文字(滑动条内部)
-    const text = $('<div>', {
-      class: 'text'
-    }).text('拖动滑块完成拼图')
-    const canvasText = $('<div>', {
-      class: 'canvas-text'
-    })
-    // 创建工作栏
-    const actionBar = $('<div>', {
-      class: 'action-bar'
-    })
-    // 创建关闭验证按钮
-    const closeBtn = $('<span>', {
-      class: 'action-bar-item iconfont iconicon-test1'
-    })
-    const refreshBtn = $('<span>', {
-      class: 'action-bar-item iconfont iconicon-test'
-    })
-    const question = $('<span>', {
-      class: 'action-bar-item iconfont iconicon-test2'
-    })
-    // 创建通过验证文案
-    const crossText = $('<div>', {
-      class: 'valid-wraper-cross-text'
-    }).append('<i class="iconfont icon-tongguoyanzheng"></i><span>通过验证</span>')
-    this.DOM = {
-      componentWraper,
-      canvasContainer,
-      canvas,
-      sliderContainer,
-      slider,
-      mask,
-      text,
-      canvasText,
-      sliderText,
-      actionBar,
-      closeBtn,
-      refreshBtn,
-      question,
-      crossText
-    }
   }
+
+  _callAnimationChain(chain: ((resolve: (value?: unknown) => void) => void)[]): Promise<unknown> {
+    let promise: Promise<unknown>
+    chain.forEach((animateFn) => {
+      promise = promise ? promise.then(() => new Promise(animateFn)) : new Promise(animateFn)
+    })
+    return promise!
+  }
+
   // 初始化CANVAS
-  processCanvas(): void {
-    const { imgWidth, imgHeight } = this.data!
-    const { canvas, canvasContainer, sliderContainer } = this.DOM!
+  _processCanvas(): void {
+    const { imgWidth, imgHeight } = this._options.data
+    const { canvas, canvasContainer, sliderContainer } = this._DOM
     canvas
       .attr({
         width: imgWidth,
@@ -143,37 +148,79 @@ class Jqsv {
     sliderContainer.css({
       width: toPx(imgWidth)
     })
+  }
+
+  updateComponentData(data : JqsvData) : void {
+    this._options.data = data 
+    this._processCanvas()
+    this._fillCanvas()
+    this._processeOverlayCanvas()
+    this._fillOverlay()
+  }
+
+  _fillCanvas() {
     const image = $('<img>', {
-      src: this.data!.normal
+      src: this._options.data.normal
     })
     image.on('load', () => {
-      const ctx = (canvas.get(0) as HTMLCanvasElement).getContext('2d')!
-      const arr = this.data!.array
-      const length = arr.length
-      const avg = Math.floor(length / 2)
+      const ctx = (this._DOM.canvas.get(0) as HTMLCanvasElement).getContext('2d')!
+      const randomArray = this._options.data.array
+      const length = randomArray.length
+      const halfLengh = Math.floor(length / 2)
       // 计算裁剪量 默认上下1张 共20张
-      const cutX = Math.floor(imgWidth / avg)
-      const cutY = Math.floor(imgHeight / 2)
+      const cutWidth = Math.floor(this._options.data.imgWidth / halfLengh)
+      const cutHeight = Math.floor(this._options.data.imgHeight / 2)
       // 开始拼接图片
-      for (let i = 0; i < length; i++) {
+      for (let index = 0; index < length; index++) {
         // 计算横坐标
-        const x = arr[i] >= avg ? (arr[i] - avg) * cutX : arr[i] * cutX
-        const y = arr[i] >= avg ? cutY : 0
-        const xx = i >= avg ? (i - avg) * cutX : i * cutX
-        const yy = i >= avg ? cutY : 0
-        ctx.drawImage(image.get(0) as HTMLImageElement, xx, yy, cutX, cutY, x, y, cutX, cutY)
+        const disorderedPicturePositionX =
+          randomArray[index] >= halfLengh ? (randomArray[index] - halfLengh) * cutWidth : randomArray[index] * cutWidth
+        const disorderedPicturePositionY = randomArray[index] >= halfLengh ? cutHeight : 0
+        const canvasPositionX = index >= halfLengh ? (index - halfLengh) * cutWidth : index * cutWidth
+        const canvasPositionY = index >= halfLengh ? cutHeight : 0
+        ctx.drawImage(
+          image.get(0) as HTMLImageElement,
+          canvasPositionX,
+          canvasPositionY,
+          cutWidth,
+          cutHeight,
+          disorderedPicturePositionX,
+          disorderedPicturePositionY,
+          cutWidth,
+          cutHeight
+        )
       }
     })
   }
 
-  processeOverlayCanvas(): void {
-    const { small, locationY, imgWidth, imgHeight } = this.data!
-    const image = $('<img>', {
-      src: small
+  _fillOverlay() {
+    this._DOM.blockImage.on('load', (e: any) => {
+      this._blockMeta.height = e.target.height
+      this._blockMeta.width = e.target.width
+      this.moveOverlayCanvas(globalConfig.initialX)
+      this._DOM.canvasContainer.append(this._DOM.overlayCanvas)
     })
-    const canvas = $('<canvas>', {
-      class: 'canvas'
-    })
+  }
+
+  moveOverlayCanvas(disorderedPicturePositionX: number) {
+    const ctx = (this._DOM.overlayCanvas.get(0) as HTMLCanvasElement).getContext('2d')!
+    ctx.clearRect(0, 0, this._options.data.imgWidth, this._options.data.imgHeight)
+    ctx.drawImage(
+      this._DOM.blockImage.get(0) as HTMLImageElement,
+      0,
+      0,
+      this._blockMeta.width,
+      this._blockMeta.height,
+      disorderedPicturePositionX,
+      this._options.data.locationY,
+      this._blockMeta.width,
+      this._blockMeta.height
+    )
+  }
+
+  _processeOverlayCanvas(): void {
+    const { imgWidth, imgHeight } = this._options.data
+    this._DOM.overlayCanvas
       .attr({
         width: imgWidth,
         height: imgHeight
@@ -183,133 +230,88 @@ class Jqsv {
         left: 0,
         top: 0
       })
-    image.on('load', (e: any) => {
-      const ctx = (canvas.get(0) as HTMLCanvasElement).getContext('2d')!
-      const height = e.target.height
-      const width = e.target.width
-      ctx.drawImage(
-        image.get(0) as HTMLImageElement,
-        0,
-        0,
-        width,
-        height,
-        globalConfig.initialX,
-        locationY,
-        width,
-        height
-      )
-      this.DOM!.canvasContainer.append(canvas)
-      this.moveOverlayCanvas = function (x: number) {
-        ctx.clearRect(0, 0, imgWidth, imgHeight)
-        ctx.drawImage(image.get(0) as HTMLImageElement, 0, 0, width, height, x, locationY, width, height)
+  }
+
+  _dragStart(e: any) {
+    this._moveState.originX = e.clientX || e.touches[0].clientX
+    this._moveState.isTouching = true
+    this._DOM.text.fadeOut('normal')
+    this._DOM.sliderText.toggleClass('icongengduo iconmoduanzuoyouzhankai_o')
+  }
+
+  _dragMove(e: any) {
+    if (!this._moveState.isTouching) return
+    const moveX = (e.clientX || e.touches[0].clientX) - this._moveState.originX
+    // 如果移动距离X小于0? 或者加40 >= w ? 直接退出
+    if (moveX < 0 || moveX + 40 >= this._options.data.imgWidth) {
+      return false
+    }
+    this._DOM.slider.css({ transform: `translateX(${toPx(moveX)})` })
+    this.moveOverlayCanvas(moveX + globalConfig.initialX)
+    this._DOM.sliderContainer.addClass('sliderContainer_active')
+    this._DOM.mask.css({ width: moveX + 'px' })
+  }
+
+  _dragEnd(e: any) {
+    if (!this._moveState.isTouching) return
+    this._moveState.isTouching = false
+    this._DOM.sliderContainer.removeClass('sliderContainer_active')
+    this._DOM.sliderText.toggleClass('icongengduo iconmoduanzuoyouzhankai_o')
+    this._options.submit(
+      {
+        validToken: this._options.data.validToken,
+        requestToken: this._options.data.sTime,
+        timespan: 1000,
+        point: Math.round((e.clientX || e.touches[0].clientX) - this._moveState.originX + globalConfig.initialX),
+        datelist: []
+      },
+      (errorMessage) => {
+        return errorMessage === undefined ? this._callAnimationChain(this._successAnimationChain) : Promise.resolve(this._failValidHandler(errorMessage))
       }
-    })
+    )
   }
 
   // 绑定事件
-  processEvent(): void {
-    const { closeBtn, componentWraper, refreshBtn, slider } = this.DOM!
-    this.el.on('selectstart', () => false)
-    closeBtn.on('click', (e: any) => {
+  _processEvent(): void {
+    const { componentWraper, slider } = this._DOM
+    this._el.on('selectstart', () => false)
+
+    this._DOM.closeBtn.on('click', (e: any) => {
       e.stopPropagation()
       componentWraper.fadeOut('normal')
-      this.config.close ? this.config.close() : void 0
+      this._options.close ? this._options.close() : void 0
     })
-    refreshBtn.on('click', (e: any) => {
+
+    this._DOM.refreshBtn.on('click', (e: any) => {
       e.stopPropagation()
-      this.processData().then(this.processCanvas.bind(this))
-      this.config.refresh ? this.config.refresh() : void 0;
+      this._options.refresh ? this._options.refresh(this.updateComponentData.bind(this)) : void 0
     })
-    let originX: number
-    let isTouch = false
-    // originY: number,
-    const dragStart = (e: any) => {
-      const { text, sliderText } = this.DOM!
-      // 记录鼠标移动元素位置
-      originX = e.clientX || e.touches[0].clientX
-      // originY = e.clientY || e.touches[0].clientY
-      isTouch = true
-      // 文字渐渐消失
-      text.fadeOut('normal')
-      // 滑块文字切换样式改变
-      sliderText.toggleClass('icongengduo iconmoduanzuoyouzhankai_o')
-    }
+    const _dragStart = this._dragStart.bind(this)
+    const _dragMove = this._dragMove.bind(this)
+    const _dragEnd = this._dragEnd.bind(this)
 
-    const dragMove = (e: any) => {
-      if (!isTouch) return
-      const { sliderContainer, mask, slider } = this.DOM!
-      // 记录鼠标移动位置
-      const eventX = e.clientX || e.touches[0].clientX
-      // const eventY = e.clientY || e.touches[0].clientY
-      // 计算移动距离
-      const moveX = eventX - originX
-      // const moveY = eventY - originY
-      const { imgWidth } = this.data!
-      // 如果移动距离X小于0? 或者加38 >= w ? 直接退出
-      if (moveX < 0 || moveX + 40 >= imgWidth) {
-        return false
-      }
-      slider.css({ transform: `translateX(${toPx(moveX)})` })
-      this.moveOverlayCanvas!(moveX + globalConfig.initialX)
-      sliderContainer.addClass('sliderContainer_active')
-      mask.css({ width: moveX + 'px' })
-    }
-
-    const dragEnd = (e: any) => {
-      if (!isTouch) return
-      isTouch = false
-      const eventX = e.clientX || e.touches[0].clientX
-      const { componentWraper, sliderContainer, sliderText, slider } = this.DOM!
-      const { onSubmit } = this.config
-      sliderContainer.removeClass('sliderContainer_active')
-      sliderText.toggleClass('icongengduo iconmoduanzuoyouzhankai_o')
-      onSubmit(this.data!.validToken, this.sTime!, 1000, Math.round(eventX - originX + globalConfig.initialX), [])
-        .then(({ code, data, msg }) => {
-          if (code === 10000) {
-            this.showCanvasText(msg, true, 200)
-              .then(this.successAnimation.bind(this))
-              .then(() => {
-                componentWraper.fadeOut()
-                this.config.success ? this.config.success(data) : void 0
-              })
-          } else {
-            this.showCanvasText(msg, false)
-            shake(componentWraper, 2, 10, 400)
-            slider.css({ transform: `translateX(0px)` }) // 重置滚动条
-            this.moveOverlayCanvas!(globalConfig.initialX)
-            this.config.fail ? this.config.fail() : void 0
-          }
-        })
-        .catch(() => {
-          this.showCanvasText('网络错误', false)
-          slider.css({
-            transform: `translateX(${toPx(globalConfig.initialX)})`
-          }) // 重置滚动条
-          this.moveOverlayCanvas!(globalConfig.initialX)
-        })
-    }
-    slider.on('mousedown', dragStart)
-    slider.on('touchstart', dragStart)
-    document.addEventListener('mousemove', dragMove)
-    document.addEventListener('touchmove', dragMove)
-    document.addEventListener('mouseup', dragEnd)
-    document.addEventListener('touchend', dragEnd)
-    this.destory = () => {
-      this.el.empty()
-      document.removeEventListener('mousemove', dragMove)
-      document.removeEventListener('touchmove', dragMove)
-      document.removeEventListener('mouseup', dragEnd)
-      document.removeEventListener('touchend', dragEnd)
+    this._DOM.slider.on('mousedown', _dragStart)
+    this._DOM.slider.on('touchstart', _dragStart)
+    document.addEventListener('mousemove', _dragMove)
+    document.addEventListener('touchmove', _dragMove)
+    document.addEventListener('mouseup', _dragEnd)
+    document.addEventListener('touchend', _dragEnd)
+    this._destory = () => {
+      this._el.empty()
+      document.removeEventListener('mousemove', _dragMove)
+      document.removeEventListener('touchmove', _dragMove)
+      document.removeEventListener('mouseup', _dragEnd)
+      document.removeEventListener('touchend', _dragEnd)
       this.state = 'destory'
     }
   }
 
   show(): void {
-    this.DOM!.componentWraper.fadeIn()
+    this._DOM.componentWraper.fadeIn()
   }
 
   // 展示组件
-  display(): void {
+  _display(): void {
     const {
       slider,
       canvasContainer,
@@ -323,7 +325,7 @@ class Jqsv {
       canvasText,
       text,
       sliderText
-    } = this.DOM!
+    } = this._DOM
     slider.append(sliderText)
     canvasContainer.append(canvas)
     canvasContainer.append(canvasText)
@@ -338,7 +340,7 @@ class Jqsv {
     componentWraper.append(canvasContainer)
     componentWraper.append(sliderContainer)
     componentWraper.append(actionBar)
-    this.el.append(componentWraper)
+    this._el.append(componentWraper)
   }
 
   /**
@@ -348,9 +350,9 @@ class Jqsv {
    * @param {number} animateTime 动画时间(毫秒)
    * @param {number} waitTime 静止时间(毫秒)
    */
-  showCanvasText(text: string, isSuccess: boolean, animateTime = 1000, waitTime = 1000) {
+  _showCanvasText(text: string, isSuccess: boolean, animateTime = 1000, waitTime = 1000) {
     return new Promise((resolve) => {
-      const { canvasText } = this.DOM!
+      const { canvasText } = this._DOM
       const { successColor, failColor } = globalConfig
       const heigth = canvasText
         .text(text)
@@ -364,24 +366,13 @@ class Jqsv {
       }, waitTime)
     })
   }
-  // 验证成功时调用的动画事件
-  successAnimation() {
-    return new Promise((resolve) => {
-      const { componentWraper, crossText } = this.DOM!
-      componentWraper.empty().append(crossText)
-      componentWraper.animate(
-        {
-          width: toPx(250),
-          height: toPx(150),
-          padding: 0
-        },
-        500,
-        crossText.fadeIn.bind(crossText, 500, resolve)
-      )
-    })
+  // 验证失败时重置拼图与显示提示信息
+  _failValidHandler(errorMessage: string) {
+    this._showCanvasText(errorMessage, false)
+    shake(this._DOM.componentWraper, 2, 10, 400)
+    this._DOM.slider.css({ transform: `translateX(0px)` }) // 重置滚动条
+    this.moveOverlayCanvas(globalConfig.initialX)
   }
 }
 
-export default async function (opt: JqsvConfig, el: HTMLElement) {
-  return await new Jqsv(opt, el).init()
-}
+export default Jqsv

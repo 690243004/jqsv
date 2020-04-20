@@ -1,22 +1,16 @@
-export interface JqsvConfig {
-  success?(data: any): void
-  refresh?(): void
-  fail?(): void
+export interface JqsvOption {
+  data: JqsvData
+  refresh(callback: (data: JqsvData) => void): void
   close?(): void
-  onLoad(token: number): Promise<JqsvOnloadResponse>
-  onSubmit(
-    vaildToken: string,
-    requestToken: number,
-    timespan: number,
-    point: number,
-    datelist: number[]
-  ): Promise<JqsvOnSubmitReponse>
+  submit(data: SubmitData, callback: (errorMessage: string | undefined) => void): void
 }
 
-export interface JqsvOnSubmitReponse {
-  msg: string
-  code: number
-  data: any
+export interface SubmitData {
+  validToken: string
+  requestToken: number
+  timespan: number
+  point: number
+  datelist: number[]
 }
 
 export interface JqsvOnloadResponse {
@@ -31,13 +25,15 @@ export interface JqsvData {
   small: string
   array: number[]
   locationY: number
-  validToken: string
+  validToken: string,
+  sTime: number
 }
 
 export interface JqsvDOM {
   componentWraper: JQuery
   canvasContainer: JQuery
   canvas: JQuery
+  overlayCanvas: JQuery
   sliderContainer: JQuery
   slider: JQuery
   sliderText: JQuery
@@ -49,4 +45,5 @@ export interface JqsvDOM {
   refreshBtn: JQuery
   question: JQuery
   crossText: JQuery
+  blockImage: JQuery
 }
